@@ -1,0 +1,73 @@
+{
+  "entities": {
+    "CharacterProfile": {
+      "title": "CharacterProfile",
+      "description": "A dramatic character dossier created by a writer for short video scripts.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Owner Firebase Auth UID" },
+        "name": { "type": "string", "description": "Character display name (1-80 chars)" },
+        "role": { "type": "string", "description": "Narrative role e.g. Protagonist, Antagonist" },
+        "archetype": { "type": "string", "description": "Dramatic archetype" },
+        "ageOrLook": { "type": "string", "description": "Visual appearance and casting notes" },
+        "coreDesire": { "type": "string", "description": "What the character wants most in the scene" },
+        "fatalFlaw": { "type": "string", "description": "Internal contradiction or flaw creating conflict" },
+        "backstory": { "type": "string", "description": "Formative secret or backstory" },
+        "voiceStyle": { "type": "string", "description": "Dialogue cadence, subtext, and speech patterns" },
+        "accentColorKey": {
+          "type": "string",
+          "enum": ["AMBER", "CRIMSON", "COBALT", "EMERALD", "VIOLET"],
+          "description": "Badge accent color key"
+        },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Server timestamp on creation" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Server timestamp on update" }
+      },
+      "required": [
+        "userId", "name", "role", "archetype", "ageOrLook",
+        "coreDesire", "fatalFlaw", "backstory", "voiceStyle",
+        "accentColorKey", "createdAt", "updatedAt"
+      ]
+    },
+    "DramaticScript": {
+      "title": "DramaticScript",
+      "description": "A short dramatic video script with dramatic beats, formatted lines, and cast links.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Owner Firebase Auth UID" },
+        "title": { "type": "string", "description": "Script title (1-120 chars)" },
+        "genre": { "type": "string", "description": "Dramatic genre" },
+        "logline": { "type": "string", "description": "One-sentence dramatic hook" },
+        "setting": { "type": "string", "description": "Primary scene slugline" },
+        "tone": { "type": "string", "description": "Atmospheric tone and pacing" },
+        "targetDurationSec": { "type": "integer", "description": "Target video runtime in seconds (15-900)" },
+        "characterIds": { "type": "array", "description": "Linked character document IDs" },
+        "characterNames": { "type": "array", "description": "Denormalized linked character names" },
+        "beats": { "type": "array", "description": "Ordered dramatic story beats with camera cues" },
+        "lines": { "type": "array", "description": "Ordered screenplay lines (ACTION, DIALOGUE, TRANSITION)" },
+        "directorNotes": { "type": "string", "description": "Framing, lighting, and performance notes" },
+        "status": {
+          "type": "string",
+          "enum": ["DRAFT", "REFINED", "READY"],
+          "description": "Script production status"
+        },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Server timestamp on creation" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Server timestamp on update" }
+      },
+      "required": [
+        "userId", "title", "genre", "logline", "setting", "tone",
+        "targetDurationSec", "characterIds", "characterNames",
+        "beats", "lines", "directorNotes", "status", "createdAt", "updatedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/users/{userId}/characters/{characterId}": {
+      "schema": { "$ref": "#/entities/CharacterProfile" },
+      "description": "User-owned dramatic character profiles"
+    },
+    "/users/{userId}/scripts/{scriptId}": {
+      "schema": { "$ref": "#/entities/DramaticScript" },
+      "description": "User-owned short dramatic video scripts"
+    }
+  }
+}

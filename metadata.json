@@ -1,0 +1,6 @@
+{
+  "name": "SceneForge",
+  "description": "AI-powered short dramatic video scriptwriter with character development tools, conflict arcs, and scene breakdown.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

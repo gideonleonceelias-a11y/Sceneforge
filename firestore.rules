@@ -1,0 +1,167 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global default-deny safety net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidCharacter(data) {
+      return data.userId is string &&
+             data.userId == request.auth.uid &&
+             data.userId.size() >= 1 &&
+             data.userId.size() <= 128 &&
+             data.name is string &&
+             data.name.size() >= 1 &&
+             data.name.size() <= 80 &&
+             data.role is string &&
+             data.role.size() >= 1 &&
+             data.role.size() <= 40 &&
+             data.archetype is string &&
+             data.archetype.size() <= 80 &&
+             data.ageOrLook is string &&
+             data.ageOrLook.size() <= 120 &&
+             data.coreDesire is string &&
+             data.coreDesire.size() <= 500 &&
+             data.fatalFlaw is string &&
+             data.fatalFlaw.size() <= 500 &&
+             data.backstory is string &&
+             data.backstory.size() <= 2000 &&
+             data.voiceStyle is string &&
+             data.voiceStyle.size() <= 400 &&
+             data.accentColorKey is string &&
+             data.accentColorKey in ['AMBER', 'CRIMSON', 'COBALT', 'EMERALD', 'VIOLET'] &&
+             data.createdAt is timestamp &&
+             data.createdAt <= request.time &&
+             data.updatedAt is timestamp &&
+             data.updatedAt <= request.time;
+    }
+
+    function isValidScript(data) {
+      return data.userId is string &&
+             data.userId == request.auth.uid &&
+             data.userId.size() >= 1 &&
+             data.userId.size() <= 128 &&
+             data.title is string &&
+             data.title.size() >= 1 &&
+             data.title.size() <= 120 &&
+             data.genre is string &&
+             data.genre.size() >= 1 &&
+             data.genre.size() <= 40 &&
+             data.logline is string &&
+             data.logline.size() <= 500 &&
+             data.setting is string &&
+             data.setting.size() <= 160 &&
+             data.tone is string &&
+             data.tone.size() <= 120 &&
+             data.targetDurationSec is int &&
+             data.targetDurationSec >= 15 &&
+             data.targetDurationSec <= 900 &&
+             data.characterIds is list &&
+             data.characterIds.size() <= 12 &&
+             (data.characterIds.size() == 0 || data.characterIds[0] is string) &&
+             data.characterNames is list &&
+             data.characterNames.size() <= 12 &&
+             (data.characterNames.size() == 0 || data.characterNames[0] is string) &&
+             data.beats is list &&
+             data.beats.size() <= 20 &&
+             (data.beats.size() == 0 || data.beats[0] is map) &&
+             data.lines is list &&
+             data.lines.size() <= 100 &&
+             (data.lines.size() == 0 || data.lines[0] is map) &&
+             data.directorNotes is string &&
+             data.directorNotes.size() <= 2000 &&
+             data.status is string &&
+             data.status in ['DRAFT', 'REFINED', 'READY'] &&
+             data.createdAt is timestamp &&
+             data.createdAt <= request.time &&
+             data.updatedAt is timestamp &&
+             data.updatedAt <= request.time;
+    }
+
+    match /users/{userId}/characters/{characterId} {
+      allow get: if isOwner(userId) && isValidId(characterId);
+      allow list: if isOwner(userId);
+
+      allow create: if isOwner(userId) &&
+                       isValidId(characterId) &&
+                       incoming().keys().hasAll([
+                         'userId', 'name', 'role', 'archetype', 'ageOrLook',
+                         'coreDesire', 'fatalFlaw', 'backstory', 'voiceStyle',
+                         'accentColorKey', 'createdAt', 'updatedAt'
+                       ]) &&
+                       incoming().keys().hasOnly([
+                         'userId', 'name', 'role', 'archetype', 'ageOrLook',
+                         'coreDesire', 'fatalFlaw', 'backstory', 'voiceStyle',
+                         'accentColorKey', 'createdAt', 'updatedAt'
+                       ]) &&
+                       isValidCharacter(incoming());
+
+      allow update: if isOwner(userId) &&
+                       isValidId(characterId) &&
+                       isValidCharacter(incoming()) &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().diff(existing()).affectedKeys().hasOnly([
+                         'name', 'role', 'archetype', 'ageOrLook',
+                         'coreDesire', 'fatalFlaw', 'backstory', 'voiceStyle',
+                         'accentColorKey', 'updatedAt'
+                       ]);
+
+      allow delete: if isOwner(userId) && isValidId(characterId);
+    }
+
+    match /users/{userId}/scripts/{scriptId} {
+      allow get: if isOwner(userId) && isValidId(scriptId);
+      allow list: if isOwner(userId);
+
+      allow create: if isOwner(userId) &&
+                       isValidId(scriptId) &&
+                       incoming().keys().hasAll([
+                         'userId', 'title', 'genre', 'logline', 'setting', 'tone',
+                         'targetDurationSec', 'characterIds', 'characterNames',
+                         'beats', 'lines', 'directorNotes', 'status', 'createdAt', 'updatedAt'
+                       ]) &&
+                       incoming().keys().hasOnly([
+                         'userId', 'title', 'genre', 'logline', 'setting', 'tone',
+                         'targetDurationSec', 'characterIds', 'characterNames',
+                         'beats', 'lines', 'directorNotes', 'status', 'createdAt', 'updatedAt'
+                       ]) &&
+                       isValidScript(incoming());
+
+      allow update: if isOwner(userId) &&
+                       isValidId(scriptId) &&
+                       isValidScript(incoming()) &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().diff(existing()).affectedKeys().hasOnly([
+                         'title', 'genre', 'logline', 'setting', 'tone',
+                         'targetDurationSec', 'characterIds', 'characterNames',
+                         'beats', 'lines', 'directorNotes', 'status', 'updatedAt'
+                       ]);
+
+      allow delete: if isOwner(userId) && isValidId(scriptId);
+    }
+  }
+}
